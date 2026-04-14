@@ -908,3 +908,70 @@ def registrar_venda():
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
+
+# =============================================================================
+# CÓDIGO VISUAL PARA MYSQL (APENAS PARA VISUALIZAÇÃO - NÃO EXECUTA)
+# Este bloco mostra como seria o código se usasse MySQL em vez de SQLite
+# Para usar MySQL, descomente este bloco e comente o código SQLite acima
+# Instale: pip install pymysql
+# =============================================================================
+
+# import pymysql  # Descomente para usar MySQL
+
+# DATABASE_CONFIG = {
+#     'host': 'localhost',
+#     'user': 'root',
+#     'password': 'sua_senha',
+#     'database': 'loja_db',
+#     'charset': 'utf8mb4'
+# }
+
+# def init_db_mysql():
+#     conn = pymysql.connect(**DATABASE_CONFIG)
+#     cursor = conn.cursor()
+#     cursor.execute('''
+#         CREATE TABLE IF NOT EXISTS jogos (
+#             id INT AUTO_INCREMENT PRIMARY KEY,
+#             nome VARCHAR(255) NOT NULL,
+#             preco DECIMAL(10,2) NOT NULL,
+#             plataforma VARCHAR(100) NOT NULL,
+#             quantidade INT NOT NULL
+#         )
+#     ''')
+#     cursor.execute('''
+#         CREATE TABLE IF NOT EXISTS clientes (
+#             id INT AUTO_INCREMENT PRIMARY KEY,
+#             nome VARCHAR(255) NOT NULL,
+#             email VARCHAR(255) NOT NULL,
+#             telefone VARCHAR(20) NOT NULL
+#         )
+#     ''')
+#     conn.commit()
+#     conn.close()
+
+# @app.route('/')
+# def index_mysql():
+#     conn = pymysql.connect(**DATABASE_CONFIG)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT id, nome, preco, plataforma, quantidade FROM jogos')
+#     jogos = cursor.fetchall()
+#     conn.close()
+#     # ... resto do HTML igual ao SQLite
+
+# @app.route('/clientes')
+# def clientes_mysql():
+#     conn = pymysql.connect(**DATABASE_CONFIG)
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT id, nome, email, telefone FROM clientes')
+#     clientes = cursor.fetchall()
+#     conn.close()
+#     # ... resto do HTML igual ao SQLite
+
+# # Para rodar com MySQL, substitua init_db() por init_db_mysql()
+# # if __name__ == '__main__':
+# #     init_db_mysql()
+# #     app.run(debug=True)
+
+# =============================================================================
+# FIM DO CÓDIGO VISUAL MYSQL
+# =============================================================================

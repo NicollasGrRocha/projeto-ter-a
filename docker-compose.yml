@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: loja_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: loja_db
+      MYSQL_USER: loja_user
+      MYSQL_PASSWORD: loja_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - loja_network
+
+  app:
+    build: .
+    container_name: loja_app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=loja_user
+      - DB_PASSWORD=loja_password
+      - DB_NAME=loja_db
+      - FLASK_ENV=development
+    depends_on:
+      - mysql
+    networks:
+      - loja_network
+    volumes:
+      - .:/app
+      - /app/__pycache__
+
+volumes:
+  mysql_data:
+
+networks:
+  loja_network:
+    driver: bridge
