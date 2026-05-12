@@ -5,6 +5,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 DATABASE = 'LojaDB.db'
+LOW_STOCK_THRESHOLD = 5
 
 # ensure database and table
 
@@ -44,6 +45,10 @@ def init_db():
 
 @app.route('/')
 def index():
+    return redirect(url_for('user_home'))
+
+@app.route('/user')
+def user_home():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     cursor.execute('SELECT id, nome, preco, plataforma, quantidade FROM jogos')
@@ -55,7 +60,7 @@ def index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Loja de Jogos - Início</title>
+        <title>Loja de Jogos - Usuário</title>
         <style>
             body {
                 font-family: 'Arial', sans-serif;
@@ -146,16 +151,17 @@ def index():
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos 🏆</h1>
+            <h1>🏆 Loja de Jogos - Usuário 🏆</h1>
             <nav>
-                <a href="{{ url_for('index') }}">Jogos</a>
-                <a href="{{ url_for('clientes') }}">Clientes</a>
-                <a href="{{ url_for('vendas') }}">Vendas</a>
+                <a href="{{ url_for('user_home') }}">Home</a>
+                <a href="{{ url_for('registrar_venda') }}">Comprar Jogo</a>
+                <a href="{{ url_for('admin_home') }}">Admin</a>
             </nav>
         </header>
         <div class="container">
             <h1>Jogos Disponíveis</h1>
-            <a class="btn btn-primary" href="{{ url_for('cadastrar') }}">Cadastrar Novo Jogo</a>
+            <a class="btn btn-secondary" href="{{ url_for('registrar_venda') }}">Registrar Compra</a>
+            <a class="btn btn-secondary" href="{{ url_for('admin_home') }}">Acesso Admin</a>
             <table>
                 <tr><th>ID</th><th>Nome</th><th>Preço</th><th>Plataforma</th><th>Quantidade</th></tr>
                 {% for jogo in jogos %}
@@ -173,6 +179,586 @@ def index():
     </html>
     '''
     return render_template_string(html, jogos=jogos)
+
+@app.route('/admin')
+def admin_home():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    
+    # Get filter parameters
+    nome_filtro = request.args.get('nome', '').strip()
+    plataforma_filtro = request.args.get('plataforma', '').strip()
+    quantidade_filtro = request.args.get('quantidade', '').strip()
+    
+    # Build base query
+    query = 'SELECT id, nome, preco, plataforma, quantidade FROM jogos WHERE 1=1'
+    params = []
+    
+    # Apply filters
+    if nome_filtro:
+        query += ' AND nome LIKE ?'
+        params.append(f'%{nome_filtro}%')
+    
+    if plataforma_filtro:
+        query += ' AND plataforma LIKE ?'
+        params.append(f'%{plataforma_filtro}%')
+    
+    if quantidade_filtro:
+        try:
+            qty = int(quantidade_filtro)
+            query += ' AND quantidade = ?'
+            params.append(qty)
+        except ValueError:
+            pass
+    
+    query += ' ORDER BY quantidade ASC'
+    cursor.execute(query, params)
+    jogos = cursor.fetchall()
+    
+    # Get low stock items
+    cursor.execute('SELECT id, nome, preco, plataforma, quantidade FROM jogos WHERE quantidade <= ?', (LOW_STOCK_THRESHOLD,))
+    low_stock = cursor.fetchall()
+    
+    conn.close()
+    
+    html = '''
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Loja de Jogos - Admin</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background: linear-gradient(135deg, #1e3c72, #2a5298);
+                color: #fff;
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            header {
+                background: rgba(0, 0, 0, 0.8);
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            }
+            nav {
+                margin-top: 10px;
+            }
+            nav a {
+                color: #fff;
+                text-decoration: none;
+                margin: 0 15px;
+                padding: 10px 20px;
+                background: #28a745;
+                border-radius: 5px;
+                transition: background 0.3s;
+            }
+            nav a:hover {
+                background: #218838;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 20px auto;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                flex: 1;
+            }
+            h1 {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .actions {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .filters {
+                background: rgba(0, 0, 0, 0.3);
+                padding: 20px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+            }
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+            }
+            .filter-group label {
+                margin-bottom: 5px;
+                font-weight: bold;
+                font-size: 0.9em;
+            }
+            .filter-group input,
+            .filter-group select {
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                background: rgba(255, 255, 255, 0.9);
+                color: #333;
+            }
+            .filter-row {
+                display: flex;
+                gap: 10px;
+                align-items: flex-end;
+            }
+            .filter-row input,
+            .filter-row select {
+                flex: 1;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                background: rgba(255, 255, 255, 0.9);
+                color: #333;
+            }
+            .btn {
+                background: #007bff;
+                color: white;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+                margin: 5px;
+                transition: background 0.3s;
+            }
+            .btn:hover {
+                background: #0056b3;
+            }
+            .btn-primary { background: #28a745; }
+            .btn-primary:hover { background: #218838; }
+            .btn-secondary { background: #6c757d; }
+            .btn-secondary:hover { background: #5a6268; }
+            .btn-small {
+                padding: 8px 12px;
+                margin: 0;
+            }
+            .low-stock {
+                background: rgba(255, 99, 71, 0.18);
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            th, td {
+                padding: 15px;
+                text-align: left;
+                border-bottom: 1px solid rgba(255,255,255,0.2);
+            }
+            th {
+                background: rgba(0,0,0,0.5);
+                color: #fff;
+            }
+            tr:hover {
+                background: rgba(255,255,255,0.1);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>🏆 Loja de Jogos - Admin 🏆</h1>
+            <nav>
+                <a href="{{ url_for('admin_home') }}">Admin</a>
+                <a href="{{ url_for('user_home') }}">Usuário</a>
+            </nav>
+        </header>
+        <div class="container">
+            <h1>Dashboard do Administrador</h1>
+            <div class="actions">
+                <a class="btn btn-primary" href="{{ url_for('cadastrar') }}">Cadastrar Jogo</a>
+                <a class="btn btn-primary" href="{{ url_for('clientes') }}">Gerenciar Clientes</a>
+                <a class="btn btn-primary" href="{{ url_for('vendas') }}">Ver Vendas</a>
+                <a class="btn btn-secondary" href="{{ url_for('controle_estoque') }}">Ver Estoque</a>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="filters">
+                <h2 style="grid-column: 1 / -1; margin: 0 0 10px 0;">🔍 Filtros</h2>
+                <form method="get" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div class="filter-group">
+                        <label for="nome">Nome do Jogo:</label>
+                        <input type="text" id="nome" name="nome" value="{{ nome_filtro }}" placeholder="Buscar por nome...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="plataforma">Plataforma:</label>
+                        <input type="text" id="plataforma" name="plataforma" value="{{ plataforma_filtro }}" placeholder="Ex: PC, PS5, Xbox...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="quantidade">Quantidade:</label>
+                        <input type="number" id="quantidade" name="quantidade" value="{{ quantidade_filtro }}" placeholder="Ex: 10">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">Filtrar</button>
+                        <a href="{{ url_for('admin_home') }}" class="btn btn-secondary" style="flex: 1; text-align: center;">Limpar</a>
+                    </div>
+                </form>
+            </div>
+            
+            {% if low_stock %}
+            <div class="low-stock" style="padding:15px; border-radius:10px;">
+                <h2>⚠️ Jogos com estoque baixo</h2>
+                <table>
+                    <tr><th>ID</th><th>Nome</th><th>Plataforma</th><th>Quantidade</th><th>Ações</th></tr>
+                    {% for jogo in low_stock %}
+                    <tr>
+                        <td>{{ jogo[0] }}</td>
+                        <td>{{ jogo[1] }}</td>
+                        <td>{{ jogo[3] }}</td>
+                        <td>{{ jogo[4] }}</td>
+                        <td><a class="btn btn-secondary btn-small" href="{{ url_for('atualizar_quantidade', jogo_id=jogo[0]) }}">Atualizar</a></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            {% endif %}
+            
+            <h2 style="margin-top: 30px;">Total de jogos: {{ jogos|length }}</h2>
+            <table>
+                <tr><th>ID</th><th>Nome</th><th>Preço</th><th>Plataforma</th><th>Quantidade</th><th>Ações</th></tr>
+                {% if jogos %}
+                    {% for jogo in jogos %}
+                    <tr class="{% if jogo[4] <= low_threshold %}low-stock{% endif %}">
+                        <td>{{ jogo[0] }}</td>
+                        <td>{{ jogo[1] }}</td>
+                        <td>R$ {{ "%.2f"|format(jogo[2]) }}</td>
+                        <td>{{ jogo[3] }}</td>
+                        <td>{{ jogo[4] }}</td>
+                        <td><a class="btn btn-secondary btn-small" href="{{ url_for('atualizar_quantidade', jogo_id=jogo[0]) }}">Atualizar</a></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Nenhum jogo encontrado com os filtros aplicados</td></tr>
+                {% endif %}
+            </table>
+        </div>
+    </body>
+    </html>
+    '''
+    return render_template_string(html, jogos=jogos, low_stock=low_stock, low_threshold=LOW_STOCK_THRESHOLD, 
+                                 nome_filtro=nome_filtro, plataforma_filtro=plataforma_filtro, 
+                                 quantidade_filtro=quantidade_filtro)
+
+@app.route('/estoque')
+def controle_estoque():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, nome, preco, plataforma, quantidade FROM jogos ORDER BY quantidade ASC')
+    jogos = cursor.fetchall()
+    cursor.execute('SELECT id, nome, preco, plataforma, quantidade FROM jogos WHERE quantidade <= ?', (LOW_STOCK_THRESHOLD,))
+    low_stock = cursor.fetchall()
+    conn.close()
+    html = '''
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Loja de Jogos - Controle de Estoque</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background: linear-gradient(135deg, #1e3c72, #2a5298);
+                color: #fff;
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            header {
+                background: rgba(0, 0, 0, 0.8);
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            }
+            nav {
+                margin-top: 10px;
+            }
+            nav a {
+                color: #fff;
+                text-decoration: none;
+                margin: 0 15px;
+                padding: 10px 20px;
+                background: #28a745;
+                border-radius: 5px;
+                transition: background 0.3s;
+            }
+            nav a:hover {
+                background: #218838;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 20px auto;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                flex: 1;
+            }
+            h1 {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            th, td {
+                padding: 15px;
+                text-align: left;
+                border-bottom: 1px solid rgba(255,255,255,0.2);
+            }
+            th {
+                background: rgba(0,0,0,0.5);
+                color: #fff;
+            }
+            tr:hover {
+                background: rgba(255,255,255,0.1);
+            }
+            .btn {
+                background: #007bff;
+                color: white;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+                margin: 5px;
+                transition: background 0.3s;
+            }
+            .btn:hover {
+                background: #0056b3;
+            }
+            .btn-primary { background: #28a745; }
+            .btn-primary:hover { background: #218838; }
+            .btn-secondary { background: #6c757d; }
+            .btn-secondary:hover { background: #5a6268; }
+            .low-stock {
+                background: rgba(255, 99, 71, 0.18);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>🏆 Loja de Jogos 🏆</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">Jogos</a>
+                <a href="{{ url_for('clientes') }}">Clientes</a>
+                <a href="{{ url_for('vendas') }}">Vendas</a>
+                <a href="{{ url_for('controle_estoque') }}">Estoque</a>
+                <a href="{{ url_for('admin_home') }}">Admin</a>
+            </nav>
+        </header>
+        <div class="container">
+            <h1>Controle de Estoque</h1>
+            {% if low_stock %}
+            <div class="stock-warning">
+                <h2>⚠️ Jogos com estoque baixo</h2>
+                <table>
+                    <tr><th>ID</th><th>Nome</th><th>Plataforma</th><th>Quantidade</th><th>Ações</th></tr>
+                    {% for jogo in low_stock %}
+                    <tr class="low-stock">
+                        <td>{{ jogo[0] }}</td>
+                        <td>{{ jogo[1] }}</td>
+                        <td>{{ jogo[3] }}</td>
+                        <td>{{ jogo[4] }}</td>
+                        <td><a class="btn btn-secondary" href="{{ url_for('atualizar_quantidade', jogo_id=jogo[0]) }}">Atualizar</a></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            {% endif %}
+            <table>
+                <tr><th>ID</th><th>Nome</th><th>Preço</th><th>Plataforma</th><th>Quantidade</th><th>Ações</th></tr>
+                {% for jogo in jogos %}
+                <tr class="{% if jogo[4] <= low_threshold %}low-stock{% endif %}">
+                    <td>{{ jogo[0] }}</td>
+                    <td>{{ jogo[1] }}</td>
+                    <td>R$ {{ "%.2f"|format(jogo[2]) }}</td>
+                    <td>{{ jogo[3] }}</td>
+                    <td>{{ jogo[4] }}</td>
+                    <td><a class="btn btn-secondary" href="{{ url_for('atualizar_quantidade', jogo_id=jogo[0]) }}">Atualizar</a></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </body>
+    </html>
+    '''
+    return render_template_string(html, jogos=jogos, low_stock=low_stock, low_threshold=LOW_STOCK_THRESHOLD)
+
+@app.route('/jogos/atualizar/<int:jogo_id>', methods=['GET','POST'])
+def atualizar_quantidade(jogo_id):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    if request.method == 'POST':
+        try:
+            quantidade = int(request.form.get('quantidade', 0))
+        except ValueError:
+            quantidade = 0
+        if quantidade < 0:
+            quantidade = 0
+        cursor.execute('UPDATE jogos SET quantidade = ? WHERE id = ?', (quantidade, jogo_id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('controle_estoque'))
+    cursor.execute('SELECT id, nome, plataforma, quantidade FROM jogos WHERE id = ?', (jogo_id,))
+    jogo = cursor.fetchone()
+    conn.close()
+    if not jogo:
+        return redirect(url_for('controle_estoque'))
+    html = '''
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Atualizar Quantidade</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background: linear-gradient(135deg, #1e3c72, #2a5298);
+                color: #fff;
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            header {
+                background: rgba(0, 0, 0, 0.8);
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            }
+            nav {
+                margin-top: 10px;
+            }
+            nav a {
+                color: #fff;
+                text-decoration: none;
+                margin: 0 15px;
+                padding: 10px 20px;
+                background: #28a745;
+                border-radius: 5px;
+                transition: background 0.3s;
+            }
+            nav a:hover {
+                background: #218838;
+            }
+            .container {
+                max-width: 600px;
+                margin: 20px auto;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                flex: 1;
+            }
+            h1 {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            form {
+                display: flex;
+                flex-direction: column;
+            }
+            label {
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
+            input {
+                padding: 10px;
+                margin-bottom: 15px;
+                border: none;
+                border-radius: 5px;
+                background: rgba(255,255,255,0.9);
+                color: #333;
+            }
+            .btn {
+                background: #007bff;
+                color: white;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+                margin: 5px;
+                transition: background 0.3s;
+                align-self: flex-start;
+            }
+            .btn:hover {
+                background: #0056b3;
+            }
+            .btn-primary { background: #28a745; }
+            .btn-primary:hover { background: #218838; }
+            .btn-secondary { background: #6c757d; }
+            .btn-secondary:hover { background: #5a6268; }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>🏆 Loja de Jogos 🏆</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">Jogos</a>
+                <a href="{{ url_for('clientes') }}">Clientes</a>
+                <a href="{{ url_for('vendas') }}">Vendas</a>
+                <a href="{{ url_for('controle_estoque') }}">Estoque</a>
+            </nav>
+        </header>
+        <div class="container">
+            <h1>Atualizar Estoque</h1>
+            <form method="post">
+                <label>Jogo:</label>
+                <input type="text" value="{{ jogo[1] }} ({{ jogo[2] }})" disabled>
+                <label for="quantidade">Quantidade Atual:</label>
+                <input type="number" id="quantidade" name="quantidade" value="{{ jogo[3] }}" min="0" required>
+                <input class="btn btn-primary" type="submit" value="Salvar Quantidade">
+                <a class="btn btn-secondary" href="{{ url_for('controle_estoque') }}">Voltar</a>
+            </form>
+        </div>
+    </body>
+    </html>
+    '''
+    return render_template_string(html, jogo=jogo)
 
 @app.route('/cadastrar', methods=['GET','POST'])
 def cadastrar():
