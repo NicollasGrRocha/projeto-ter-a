@@ -146,12 +146,27 @@ def user_home():
             .btn-primary { background: #28a745; }
             .btn-primary:hover { background: #218838; }
             .btn-secondary { background: #6c757d; }
-            .btn-secondary:hover { background: #5a6268; }
-        </style>
-    </head>
+                .btn-secondary:hover { background: #5a6268; }
+        
+            /* Card de destaque por trás dos textos */
+            .card-behind {
+                background: rgba(10,36,99,0.95); /* tom azul mais escuro */
+                color: #fff;
+                padding: 8px 14px;
+                border-radius: 10px;
+                box-shadow: 0 8px 22px rgba(3,16,60,0.45);
+                display: inline-block;
+            }
+
+            /* Centralizar conteúdo do app */
+            .container { text-align: center; }
+            table th, table td { text-align: center; }
+
+            </style>
+        </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos - Usuário 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos - Usuário 🏆</h1>
             <nav>
                 <a href="{{ url_for('user_home') }}">Home</a>
                 <a href="{{ url_for('registrar_venda') }}">Comprar Jogo</a>
@@ -159,7 +174,7 @@ def user_home():
             </nav>
         </header>
         <div class="container">
-            <h1>Jogos Disponíveis</h1>
+            <h1 class="card-behind">Jogos Disponíveis</h1>
             <a class="btn btn-secondary" href="{{ url_for('registrar_venda') }}">Registrar Compra</a>
             <a class="btn btn-secondary" href="{{ url_for('admin_home') }}">Acesso Admin</a>
             <table>
@@ -375,14 +390,14 @@ def admin_home():
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos - Admin 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos - Admin 🏆</h1>
             <nav>
                 <a href="{{ url_for('admin_home') }}">Admin</a>
                 <a href="{{ url_for('user_home') }}">Usuário</a>
             </nav>
         </header>
         <div class="container">
-            <h1>Dashboard do Administrador</h1>
+            <h1 class="card-behind">Dashboard do Administrador</h1>
             <div class="actions">
                 <a class="btn btn-primary" href="{{ url_for('cadastrar') }}">Cadastrar Jogo</a>
                 <a class="btn btn-primary" href="{{ url_for('clientes') }}">Gerenciar Clientes</a>
@@ -572,17 +587,17 @@ def controle_estoque():
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos 🏆</h1>
             <nav>
                 <a href="{{ url_for('index') }}">Jogos</a>
                 <a href="{{ url_for('clientes') }}">Clientes</a>
-                <a href="{{ url_for('vendas') }}">Vendas</a>
+                
                 <a href="{{ url_for('controle_estoque') }}">Estoque</a>
                 <a href="{{ url_for('admin_home') }}">Admin</a>
             </nav>
         </header>
         <div class="container">
-            <h1>Controle de Estoque</h1>
+            <h1 class="card-behind">Controle de Estoque</h1>
             {% if low_stock %}
             <div class="stock-warning">
                 <h2>⚠️ Jogos com estoque baixo</h2>
@@ -732,20 +747,35 @@ def atualizar_quantidade(jogo_id):
             .btn-primary:hover { background: #218838; }
             .btn-secondary { background: #6c757d; }
             .btn-secondary:hover { background: #5a6268; }
+        
+        /* Card de destaque por trás dos textos */
+        .card-behind {
+            background: rgba(10,36,99,0.95); /* tom azul mais escuro */
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            box-shadow: 0 8px 22px rgba(3,16,60,0.45);
+            display: inline-block;
+        }
+
+        /* Centralizar conteúdo do app */
+        .container { text-align: center; }
+        table th, table td { text-align: center; }
+
         </style>
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos 🏆</h1>
             <nav>
                 <a href="{{ url_for('index') }}">Jogos</a>
                 <a href="{{ url_for('clientes') }}">Clientes</a>
-                <a href="{{ url_for('vendas') }}">Vendas</a>
+                
                 <a href="{{ url_for('controle_estoque') }}">Estoque</a>
             </nav>
         </header>
         <div class="container">
-            <h1>Atualizar Estoque</h1>
+            <h1 class="card-behind">Atualizar Estoque</h1>
             <form method="post">
                 <label>Jogo:</label>
                 <input type="text" value="{{ jogo[1] }} ({{ jogo[2] }})" disabled>
@@ -867,19 +897,34 @@ def cadastrar():
             .btn-primary:hover { background: #218838; }
             .btn-secondary { background: #6c757d; }
             .btn-secondary:hover { background: #5a6268; }
+        
+        /* Card de destaque por trás dos textos */
+        .card-behind {
+            background: rgba(10,36,99,0.95); /* tom azul mais escuro */
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            box-shadow: 0 8px 22px rgba(3,16,60,0.45);
+            display: inline-block;
+        }
+
+        /* Centralizar conteúdo do app */
+        .container { text-align: center; }
+        table th, table td { text-align: center; }
+
         </style>
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos 🏆</h1>
             <nav>
                 <a href="{{ url_for('index') }}">Jogos</a>
                 <a href="{{ url_for('clientes') }}">Clientes</a>
-                <a href="{{ url_for('vendas') }}">Vendas</a>
+                
             </nav>
         </header>
         <div class="container">
-            <h1>Cadastrar Novo Jogo</h1>
+            <h1 class="card-behind">Cadastrar Novo Jogo</h1>
             <form method="post">
                 <label for="nome">Nome:</label>
                 <input type="text" id="nome" name="nome" required>
@@ -1011,15 +1056,15 @@ def clientes():
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos 🏆</h1>
             <nav>
                 <a href="{{ url_for('index') }}">Jogos</a>
                 <a href="{{ url_for('clientes') }}">Clientes</a>
-                <a href="{{ url_for('vendas') }}">Vendas</a>
+                
             </nav>
         </header>
         <div class="container">
-            <h1>Clientes Cadastrados</h1>
+            <h1 class="card-behind">Clientes Cadastrados</h1>
             <a class="btn btn-primary" href="{{ url_for('cadastrar_cliente') }}">Cadastrar Novo Cliente</a>
             <table>
                 <tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Ações</th></tr>
@@ -1146,19 +1191,34 @@ def cadastrar_cliente():
             .btn-primary:hover { background: #218838; }
             .btn-secondary { background: #6c757d; }
             .btn-secondary:hover { background: #5a6268; }
+        
+        /* Card de destaque por trás dos textos */
+        .card-behind {
+            background: rgba(10,36,99,0.95); /* tom azul mais escuro */
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            box-shadow: 0 8px 22px rgba(3,16,60,0.45);
+            display: inline-block;
+        }
+
+        /* Centralizar conteúdo do app */
+        .container { text-align: center; }
+        table th, table td { text-align: center; }
+
         </style>
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos 🏆</h1>
             <nav>
                 <a href="{{ url_for('index') }}">Jogos</a>
                 <a href="{{ url_for('clientes') }}">Clientes</a>
-                <a href="{{ url_for('vendas') }}">Vendas</a>
+                
             </nav>
         </header>
         <div class="container">
-            <h1>Cadastrar Novo Cliente</h1>
+            <h1 class="card-behind">Cadastrar Novo Cliente</h1>
             <form method="post">
                 <label for="nome">Nome:</label>
                 <input type="text" id="nome" name="nome" required>
@@ -1191,13 +1251,35 @@ def deletar_cliente(cliente_id):
 def vendas():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
+    # Detailed sales list
     cursor.execute('''
         SELECT v.id, c.nome, j.nome, v.quantidade, v.data
         FROM vendas v
         JOIN clientes c ON v.cliente_id = c.id
         JOIN jogos j ON v.jogo_id = j.id
+        ORDER BY v.data DESC
     ''')
     vendas_list = cursor.fetchall()
+
+    # Total items sold overall
+    cursor.execute('SELECT SUM(quantidade) FROM vendas')
+    total_items_row = cursor.fetchone()
+    total_items = total_items_row[0] if total_items_row and total_items_row[0] is not None else 0
+
+    # Total number of vendas (transactions)
+    cursor.execute('SELECT COUNT(*) FROM vendas')
+    total_vendas = cursor.fetchone()[0]
+
+    # Aggregated history: total sold per jogo
+    cursor.execute('''
+        SELECT j.id, j.nome, j.plataforma, SUM(v.quantidade) as total_vendido
+        FROM vendas v
+        JOIN jogos j ON v.jogo_id = j.id
+        GROUP BY j.id
+        ORDER BY total_vendido DESC
+    ''')
+    vendas_por_jogo = cursor.fetchall()
+
     conn.close()
     html = '''
     <!DOCTYPE html>
@@ -1295,20 +1377,58 @@ def vendas():
             .btn-primary:hover { background: #218838; }
             .btn-secondary { background: #6c757d; }
             .btn-secondary:hover { background: #5a6268; }
+        
+        /* Card de destaque por trás dos textos */
+        .card-behind {
+            background: rgba(10,36,99,0.95); /* tom azul mais escuro */
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            box-shadow: 0 8px 22px rgba(3,16,60,0.45);
+            display: inline-block;
+        }
+
+        /* Centralizar conteúdo do app */
+        .container { text-align: center; }
+        table th, table td { text-align: center; }
+
         </style>
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos 🏆</h1>
             <nav>
                 <a href="{{ url_for('index') }}">Jogos</a>
                 <a href="{{ url_for('clientes') }}">Clientes</a>
-                <a href="{{ url_for('vendas') }}">Vendas</a>
+                
             </nav>
         </header>
         <div class="container">
-            <h1>Vendas Registradas</h1>
+            <h1 class="card-behind">Vendas Registradas</h1>
             <a class="btn btn-primary" href="{{ url_for('registrar_venda') }}">Registrar Nova Venda</a>
+            
+            <div class="summary">
+                <div class="card">
+                    <strong>Total de transações:</strong>
+                    <div style="font-size: 1.4em; margin-top:8px">{{ total_vendas }}</div>
+                </div>
+                <div class="card">
+                    <strong>Total de itens vendidos:</strong>
+                    <div style="font-size: 1.4em; margin-top:8px">{{ total_items }}</div>
+                </div>
+                <div class="card">
+                    <strong>Jogos com maiores vendas:</strong>
+                    <div style="margin-top:8px">
+                        {% for jogo in vendas_por_jogo[:3] %}
+                            <div>{{ jogo[1] }} ({{ jogo[3] }} itens)</div>
+                        {% else %}
+                            <div>Nenhum registro</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <h2>Histórico completo de vendas</h2>
             <table>
                 <tr><th>ID</th><th>Cliente</th><th>Jogo</th><th>Quantidade</th><th>Data</th></tr>
                 {% for venda in vendas_list %}
@@ -1321,11 +1441,24 @@ def vendas():
                 </tr>
                 {% endfor %}
             </table>
+
+            <h2 style="margin-top:30px">Resumo por jogo</h2>
+            <table>
+                <tr><th>ID</th><th>Nome</th><th>Plataforma</th><th>Total Vendido</th></tr>
+                {% for jogo in vendas_por_jogo %}
+                <tr>
+                    <td>{{ jogo[0] }}</td>
+                    <td>{{ jogo[1] }}</td>
+                    <td>{{ jogo[2] }}</td>
+                    <td>{{ jogo[3] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
         </div>
     </body>
     </html>
     '''
-    return render_template_string(html, vendas_list=vendas_list)
+    return render_template_string(html, vendas_list=vendas_list, total_items=total_items, total_vendas=total_vendas, vendas_por_jogo=vendas_por_jogo)
 
 @app.route('/vendas/registrar', methods=['GET','POST'])
 def registrar_venda():
@@ -1451,19 +1584,34 @@ def registrar_venda():
             .btn-primary:hover { background: #218838; }
             .btn-secondary { background: #6c757d; }
             .btn-secondary:hover { background: #5a6268; }
+        
+        /* Card de destaque por trás dos textos */
+        .card-behind {
+            background: rgba(10,36,99,0.95); /* tom azul mais escuro */
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            box-shadow: 0 8px 22px rgba(3,16,60,0.45);
+            display: inline-block;
+        }
+
+        /* Centralizar conteúdo do app */
+        .container { text-align: center; }
+        table th, table td { text-align: center; }
+
         </style>
     </head>
     <body>
         <header>
-            <h1>🏆 Loja de Jogos 🏆</h1>
+            <h1 class="card-behind">🏆 Loja de Jogos 🏆</h1>
             <nav>
                 <a href="{{ url_for('index') }}">Jogos</a>
                 <a href="{{ url_for('clientes') }}">Clientes</a>
-                <a href="{{ url_for('vendas') }}">Vendas</a>
+                
             </nav>
         </header>
         <div class="container">
-            <h1>Registrar Venda</h1>
+            <h1 class="card-behind">Registrar Venda</h1>
             <form method="post">
                 <label for="cliente_id">Cliente:</label>
                 <select id="cliente_id" name="cliente_id" required>
