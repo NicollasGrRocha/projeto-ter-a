@@ -1,53 +1,108 @@
-# Projeto Loja - Flask com SQLite e MySQL
+# Loja de Jogos - Sistema de Gerenciamento
 
-Este projeto é uma aplicação Flask simples para gerenciar jogos e clientes de uma loja.
+Uma aplicação web Flask para gerenciar vendas, estoque e clientes de uma loja de jogos. 
 
 ## Funcionalidades
 
-- Cadastro de jogos (nome, preço, plataforma, quantidade)
-- Cadastro de clientes (nome, email, telefone)
-- Listagem e exclusão de registros
-- Interface web com botões estilizados
+### Para Usuários
+- ✅ Visualizar catálogo de jogos disponíveis
+- ✅ Ver preço, plataforma e quantidade em estoque
+- ✅ Registrar compras de jogos
 
-## Como executar
+### Para Administradores  
+- ✅ Cadastro e gerenciamento de jogos
+- ✅ Cadastro e gerenciamento de clientes
+- ✅ Controle de estoque em tempo real
+- ✅ Registro de vendas
+- ✅ Histórico completo de vendas
+- ✅ **Relatório mensal** com:
+  - Total de unidades vendidas no mês
+  - Quantidade de transações
+  - Total em estoque
+  - Jogos mais vendidos
+- ✅ Alertas de estoque baixo
 
-### Opção 1: SQLite (Padrão - Mais simples)
+### Banco de Dados
+- Tabela `jogos`: id, nome, preço, plataforma, quantidade
+- Tabela `clientes`: id, nome, email, telefone
+- Tabela `vendas`: id, cliente_id, jogo_id, quantidade, data
 
-1. Instale as dependências:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Instalação e Execução
 
-2. Execute o app:
-   ```bash
-   python app.py
-   ```
+### Pré-requisitos
+- Python 3.8+
+- pip
 
-3. Acesse: http://127.0.0.1:5000/
+### Passo 1: Clonar e instalar dependências
 
-### Opção 2: MySQL (Banco de dados profissional)
-
-#### Pré-requisitos:
-- MySQL Server instalado e rodando
-- Ou Docker para executar com containers
-
-#### Passo 1: Configurar MySQL
-
-**Com MySQL local:**
-1. Instale MySQL Server
-2. Crie o banco: `CREATE DATABASE loja_db;`
-3. Execute o schema: `mysql -u root -p loja_db < schema.sql`
-
-**Com Docker:**
 ```bash
-docker-compose up -d mysql
+git clone <seu-repositorio>
+cd trabalho\ agil
+pip install -r requirements.txt
 ```
 
-#### Passo 2: Configurar aplicação
+### Passo 2: Inicializar banco de dados e popular com dados de exemplo
 
-1. Copie `config_example.py` para `config.py`
-2. Edite `config.py` com suas credenciais MySQL
-3. Ou use `.env`: copie `.env.example` para `.env` e configure
+```bash
+python seed.py
+```
+
+Isso criará o banco SQLite e adicionará:
+- 10 jogos de exemplo
+- 5 clientes de teste
+- 9 vendas de exemplo dos últimos 30 dias
+
+### Passo 3: Executar a aplicação
+
+```bash
+python app.py
+```
+
+A aplicação estará disponível em: **http://127.0.0.1:5000**
+
+## Navegação e Rotas
+
+### Para Usuários
+- **Home**: `http://127.0.0.1:5000/user` - Ver catálogo de jogos
+- **Comprar**: `http://127.0.0.1:5000/vendas/registrar` - Registrar compra
+
+### Para Administradores
+- **Admin**: `http://127.0.0.1:5000/admin` - Painel de administração
+- **Cadastrar Jogo**: `http://127.0.0.1:5000/cadastrar` - Adicionar novo jogo
+- **Clientes**: `http://127.0.0.1:5000/clientes` - Gerenciar clientes
+- **Vendas**: `http://127.0.0.1:5000/vendas` - Ver histórico de vendas
+- **Estoque**: `http://127.0.0.1:5000/estoque` - Controlar estoque
+- **Relatório**: `http://127.0.0.1:5000/relatorio` - 📊 Relatório do mês atual
+
+## Estrutura do Projeto
+
+```
+.
+├── app.py                 # Aplicação Flask principal
+├── seed.py               # Script para popular o banco com dados
+├── LojaDB.db            # Banco de dados SQLite
+├── requirements.txt      # Dependências Python
+├── schema.sql           # Schema do banco de dados
+├── migrate.py           # Script de migração
+├── docker-compose.yml   # Composição Docker
+├── Dockerfile           # Configuração Docker
+├── .gitignore          # Arquivos ignorados pelo Git
+└── README.md           # Este arquivo
+```
+
+## Tecnologias Utilizadas
+
+- **Backend**: Flask (Python)
+- **Banco de Dados**: SQLite (desenvolvimento), MySQL (produção opcional)
+- **Frontend**: HTML5 + CSS3 + Jinja2
+- **Containerização**: Docker
+
+## Temas e Estilo
+
+A interface usa um tema moderno com gradientes azuis escuros, botões interativos e design responsivo:
+- Cores principais: Azul #2563eb (botões) e cinza #475569 (secundário)
+- Design adaptável para desktop e dispositivos móveis
+- Cards e seções organizadas em grid
 
 #### Passo 3: Executar migração
 ```bash

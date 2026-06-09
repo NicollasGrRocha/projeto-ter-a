@@ -671,6 +671,7 @@ def admin_home():
                 <a class="btn btn-primary" href="{{ url_for('clientes') }}">Gerenciar Clientes</a>
                 <a class="btn btn-primary" href="{{ url_for('vendas') }}">Ver Vendas</a>
                 <a class="btn btn-secondary" href="{{ url_for('controle_estoque') }}">Ver Estoque</a>
+                <a class="btn btn-secondary" href="{{ url_for('relatorio') }}">Relatório</a>
             </div>
             
             <!-- Filtros -->
@@ -2673,6 +2674,238 @@ def vendas():
     </html>
     '''
     return render_template_string(html, vendas_list=vendas_list, total_items=total_items, total_vendas=total_vendas, vendas_por_jogo=vendas_por_jogo)
+
+@app.route('/relatorio')
+def relatorio():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    mes_atual = datetime.now().strftime('%Y-%m')
+    cursor.execute('SELECT SUM(quantidade) FROM vendas WHERE strftime("%Y-%m", data) = ?', (mes_atual,))
+    total_vendidos_mes = cursor.fetchone()[0] or 0
+    cursor.execute('SELECT COUNT(*) FROM vendas WHERE strftime("%Y-%m", data) = ?', (mes_atual,))
+    total_vendas_mes = cursor.fetchone()[0] or 0
+    cursor.execute('SELECT SUM(quantidade) FROM jogos')
+    total_estoque = cursor.fetchone()[0] or 0
+    cursor.execute('''
+        SELECT j.id, j.nome, j.plataforma, SUM(v.quantidade) as total_vendido
+        FROM vendas v
+        JOIN jogos j ON v.jogo_id = j.id
+        WHERE strftime("%Y-%m", v.data) = ?
+        GROUP BY j.id
+        ORDER BY total_vendido DESC
+        LIMIT 5
+    ''', (mes_atual,))
+    top_jogos_mes = cursor.fetchall()
+    conn.close()
+    html = '''
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Loja de Jogos - Relatório</title>
+        <style>
+            body {
+                font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: radial-gradient(circle at top left, rgba(40, 108, 201, 0.88), transparent 26%),
+                            linear-gradient(135deg, #071a3d 0%, #112d5d 45%, #14366f 100%);
+                color: #f3f7ff;
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            header {
+                width: 100%;
+                background: rgba(5, 18, 52, 0.94);
+                padding: 18px 0;
+                text-align: center;
+                box-shadow: 0 20px 70px rgba(1,16,58,0.34);
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+            header h1 {
+                margin: 0;
+                font-size: 2.4rem;
+                line-height: 1.05;
+                text-shadow: 0 4px 18px rgba(0,0,0,0.35);
+            }
+            nav {
+                margin-top: 14px;
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            nav a {
+                color: #fff;
+                text-decoration: none;
+                padding: 12px 24px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 999px;
+                border: 1px solid rgba(255,255,255,0.14);
+                transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+                font-weight: 600;
+            }
+            nav a:hover {
+                background: rgba(255,255,255,0.18);
+                transform: translateY(-1px);
+                border-color: rgba(255,255,255,0.22);
+            }
+            .container {
+                width: min(1120px, 100%);
+                margin: 32px auto 40px;
+                padding: 32px;
+                background: rgba(8, 20, 54, 0.88);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 28px;
+                box-shadow: 0 35px 90px rgba(0,0,0,0.23);
+                backdrop-filter: blur(14px);
+                text-align: center;
+            }
+            .card-behind {
+                display: inline-block;
+                padding: 12px 18px;
+                border-radius: 18px;
+                background: rgba(8, 28, 90, 0.96);
+                box-shadow: 0 18px 38px rgba(2,14,55,0.38);
+                color: #f8fafc;
+                margin-bottom: 18px;
+            }
+            .summary {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 18px;
+                margin-top: 24px;
+                text-align: left;
+            }
+            .card {
+                padding: 22px;
+                border-radius: 24px;
+                background: rgba(255,255,255,0.08);
+                border: 1px solid rgba(255,255,255,0.12);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+            }
+            .card strong {
+                display: block;
+                margin-bottom: 12px;
+                color: #dbeafe;
+            }
+            .metric-value {
+                font-size: 2rem;
+                color: #e2e8f0;
+                line-height: 1.2;
+            }
+            .metric-detail {
+                margin-top: 12px;
+                color: #cbd5e1;
+                line-height: 1.5;
+            }
+            table {
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+                margin-top: 22px;
+                border-radius: 18px;
+                overflow: hidden;
+                background: rgba(255,255,255,0.04);
+            }
+            th, td {
+                padding: 16px 18px;
+                background: rgba(255,255,255,0.06);
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+                color: #eff6ff;
+            }
+            th {
+                background: rgba(255,255,255,0.12);
+                font-weight: 700;
+            }
+            tr:hover {
+                background: rgba(255,255,255,0.08);
+            }
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 12px 22px;
+                border-radius: 999px;
+                border: none;
+                cursor: pointer;
+                text-decoration: none;
+                color: #fff;
+                transition: transform 0.2s ease, filter 0.2s ease, background 0.25s ease;
+                font-weight: 700;
+            }
+            .btn:hover { transform: translateY(-1px); }
+            .btn-primary { background: #2563eb; }
+            .btn-primary:hover { background: #1d4ed8; }
+            .btn-secondary {
+                background: #475569;
+                border: 1px solid rgba(255,255,255,0.18);
+                color: #eff6ff;
+            }
+            .btn-secondary:hover {
+                background: #334155;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1 class="card-behind">📊 Relatório Simples</h1>
+            <nav>
+                <a href="{{ url_for('admin_home') }}">Admin</a>
+                <a href="{{ url_for('user_home') }}">Usuário</a>
+            </nav>
+        </header>
+        <div class="container">
+            <h1 class="card-behind">Resumo do Mês Atual</h1>
+            <div class="summary">
+                <div class="card">
+                    <strong>Total vendido no mês</strong>
+                    <div class="metric-value">{{ total_vendidos_mes }}</div>
+                    <div class="metric-detail">Unidades vendidas em {{ mes_atual }}</div>
+                </div>
+                <div class="card">
+                    <strong>Total em estoque</strong>
+                    <div class="metric-value">{{ total_estoque }}</div>
+                    <div class="metric-detail">Soma de todos os jogos cadastrados</div>
+                </div>
+                <div class="card">
+                    <strong>Transações no mês</strong>
+                    <div class="metric-value">{{ total_vendas_mes }}</div>
+                    <div class="metric-detail">Vendas registradas em {{ mes_atual }}</div>
+                </div>
+            </div>
+
+            <h2 class="section-title">Jogos mais vendidos no mês</h2>
+            <table>
+                <tr><th>Nome</th><th>Plataforma</th><th>Total vendido</th></tr>
+                {% if top_jogos_mes %}
+                    {% for jogo in top_jogos_mes %}
+                    <tr>
+                        <td>{{ jogo[1] }}</td>
+                        <td>{{ jogo[2] }}</td>
+                        <td>{{ jogo[3] }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="3" style="text-align:center;">Nenhuma venda registrada neste mês</td></tr>
+                {% endif %}
+            </table>
+
+            <a class="btn btn-secondary" href="{{ url_for('admin_home') }}">Voltar ao Admin</a>
+        </div>
+    </body>
+    </html>
+    '''
+    return render_template_string(html, total_vendidos_mes=total_vendidos_mes, total_estoque=total_estoque, total_vendas_mes=total_vendas_mes, top_jogos_mes=top_jogos_mes, mes_atual=mes_atual)
 
 @app.route('/vendas/registrar', methods=['GET','POST'])
 def registrar_venda():
